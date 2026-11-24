@@ -23,6 +23,7 @@ Controles:
 
 import msvcrt
 import sys
+import threading
 import time
 
 from djitellopy import Tello
@@ -30,6 +31,11 @@ from djitellopy import Tello
 PASO_CM = 30
 GIRO_GRADOS = 30
 BATERIA_MINIMA_DESPEGUE = 20
+
+# El SDK del Tello aterriza solo si no recibe NINGÚN comando en 15s (documentado
+# oficialmente: Tello SDK 2.0 User Guide) — sin este hilo, el dron aterriza solo
+# a los 15s de no presionar ninguna tecla de movimiento.
+INTERVALO_KEEPALIVE_SEGUNDOS = 5
 
 AYUDA = __doc__
 
@@ -43,6 +49,17 @@ def main():
     print(f"Batería actual: {bateria}%")
 
     volando = False
+
+    detener_keepalive = threading.Event()
+
+    def bucle_keepalive():
+        while not detener_keepalive.wait(INTERVALO_KEEPALIVE_SEGUNDOS):
+            try:
+                tello.send_keepalive()
+            except Exception:
+                pass
+
+    threading.Thread(target=bucle_keepalive, daemon=True).start()
 
     print("\nListo. Presiona una tecla (ESC para salir)...\n")
     try:
