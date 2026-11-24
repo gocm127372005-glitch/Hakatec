@@ -1,4 +1,11 @@
-export function Etiqueta({ tipo }: { tipo: "real" | "simulado" | "propuesto" }) {
+export function Etiqueta({
+  tipo,
+  fuente,
+}: {
+  tipo: "real" | "simulado" | "propuesto";
+  /** Sustituye el sufijo de fuente por defecto (p. ej. "INEGI") cuando el dato viene de otro lado. */
+  fuente?: string;
+}) {
   const estilos = {
     real: "bg-emerald-500/10 text-emerald-700 ring-emerald-500/20 dark:text-emerald-300 dark:ring-emerald-500/20",
     simulado: "bg-amber-500/10 text-amber-700 ring-amber-500/20 dark:text-amber-300 dark:ring-amber-500/20",
@@ -12,7 +19,7 @@ export function Etiqueta({ tipo }: { tipo: "real" | "simulado" | "propuesto" }) 
   }[tipo];
 
   const texto = {
-    real: "DATO REAL · INEGI",
+    real: `DATO REAL · ${fuente ?? "INEGI"}`,
     simulado: "SIMULADO · pendiente de sensores",
     propuesto: "PROPUESTO · no construido",
   }[tipo];

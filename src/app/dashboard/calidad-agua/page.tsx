@@ -85,6 +85,14 @@ export default function CalidadAguaPage() {
           <Etiqueta tipo="simulado" /> Datos de ejemplo, no provienen de ningún dispositivo.
         </p>
       </Panel>
+
+      <p className="text-sm text-muted">
+        ¿Por qué el agua está así? Ver{" "}
+        <a href="/dashboard/causas" className="text-accent underline">
+          causas documentadas de contaminación
+        </a>{" "}
+        (giros industriales, parámetros excedidos, fuentes citadas).
+      </p>
     </div>
   );
 }

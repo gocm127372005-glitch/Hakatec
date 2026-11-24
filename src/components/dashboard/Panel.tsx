@@ -6,12 +6,15 @@ export function Panel({
   titulo,
   icono: Icono,
   etiqueta,
+  fuenteEtiqueta,
   acciones,
   children,
 }: {
   titulo: string;
   icono: LucideIcon;
   etiqueta: "real" | "simulado" | "propuesto";
+  /** Pasa a Etiqueta para sustituir el sufijo de fuente por defecto ("INEGI"). */
+  fuenteEtiqueta?: string;
   acciones?: ReactNode;
   children: ReactNode;
 }) {
@@ -24,7 +27,7 @@ export function Panel({
         </h2>
         <div className="flex items-center gap-2">
           {acciones}
-          <Etiqueta tipo={etiqueta} />
+          <Etiqueta tipo={etiqueta} fuente={fuenteEtiqueta} />
         </div>
       </div>
       {children}

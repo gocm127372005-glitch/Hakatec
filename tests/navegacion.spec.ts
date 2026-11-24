@@ -4,6 +4,7 @@ const RUTAS_DASHBOARD = [
   "/dashboard",
   "/dashboard/mapa",
   "/dashboard/calidad-agua",
+  "/dashboard/causas",
   "/dashboard/humedales",
   "/dashboard/dispositivos",
   "/dashboard/camaras",

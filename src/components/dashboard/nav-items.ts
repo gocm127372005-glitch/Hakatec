@@ -12,6 +12,7 @@ import {
   Users,
   Settings,
   History,
+  Factory,
   type LucideIcon,
 } from "lucide-react";
 
@@ -40,6 +41,7 @@ export const NAV_GROUPS: NavGroup[] = [
     titulo: "Monitoreo",
     items: [
       { href: "/dashboard/calidad-agua", label: "Calidad del agua", icon: Droplets },
+      { href: "/dashboard/causas", label: "Causas de contaminación", icon: Factory },
       { href: "/dashboard/humedales", label: "Humedales", icon: Waves },
       { href: "/dashboard/dispositivos", label: "Dispositivos IoT", icon: Cpu },
       { href: "/dashboard/camaras", label: "Cámaras e IA", icon: Camera },
