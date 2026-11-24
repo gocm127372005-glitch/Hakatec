@@ -26,14 +26,14 @@ export function SidebarNav({
   return (
     <aside
       className={
-        "flex h-full flex-col border-r border-line bg-surface transition-[width] duration-200 " +
+        "glass flex h-full flex-col rounded-r-2xl transition-[width] duration-200 " +
         (colapsado ? "w-16" : "w-62") +
         " " +
         className
       }
     >
       <div className="flex items-center gap-2 px-3 py-4">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-emerald-500">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent2">
           <Waves className="h-4.5 w-4.5 text-zinc-950" />
         </div>
         {!colapsado && (
@@ -63,9 +63,9 @@ export function SidebarNav({
                     title={colapsado ? label : undefined}
                     aria-current={activo ? "page" : undefined}
                     className={
-                      "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent " +
+                      "flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent " +
                       (activo
-                        ? "bg-accent/10 font-medium text-accent"
+                        ? "bg-accent/15 font-medium text-accent"
                         : "text-muted hover:bg-accent/5 hover:text-ink") +
                       (colapsado ? " justify-center" : "")
                     }
@@ -80,11 +80,11 @@ export function SidebarNav({
         ))}
       </nav>
 
-      <div className="border-t border-line p-2">
+      <div className="p-2">
         {onToggleColapsado && (
           <button
             onClick={onToggleColapsado}
-            className="hidden w-full items-center justify-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted hover:bg-accent/5 hover:text-ink lg:flex"
+            className="hidden w-full items-center justify-center gap-2 rounded-xl px-2.5 py-2 text-sm text-muted transition-colors hover:bg-accent/5 hover:text-ink lg:flex"
             title={colapsado ? "Expandir menú" : "Contraer menú"}
           >
             {colapsado ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
@@ -93,7 +93,7 @@ export function SidebarNav({
         )}
         <div
           className={
-            "mt-2 flex items-center gap-2 rounded-lg bg-accent/5 px-2.5 py-2 " +
+            "mt-2 flex items-center gap-2 rounded-xl bg-accent/5 px-2.5 py-2 " +
             (colapsado ? "justify-center" : "")
           }
         >

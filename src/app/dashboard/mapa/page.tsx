@@ -1,6 +1,6 @@
 import { MapPinned } from "lucide-react";
 import { Panel } from "@/components/dashboard/Panel";
-import MapaHumedales from "@/components/MapaHumedalesClient";
+import MapaHumedales from "@/components/MapaHumedales3DClient";
 
 export const metadata = { title: "Mapa interactivo — Atoyac" };
 

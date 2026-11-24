@@ -25,8 +25,8 @@ export function DashboardShell({ children, banner }: { children: ReactNode; bann
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-bg text-ink dark:bg-[radial-gradient(ellipse_70%_45%_at_50%_-10%,rgba(14,165,233,0.06),transparent)]">
-      <div className="hidden lg:block">
+    <div className="flex h-screen overflow-hidden bg-bg text-ink dark:bg-[radial-gradient(ellipse_80%_50%_at_20%_-10%,rgba(56,189,248,0.07),transparent),radial-gradient(ellipse_60%_40%_at_90%_10%,rgba(94,234,212,0.05),transparent)]">
+      <div className="hidden p-2 lg:block">
         <SidebarNav colapsado={colapsado} onToggleColapsado={alternarColapsado} />
       </div>
 

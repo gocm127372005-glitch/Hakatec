@@ -4,24 +4,31 @@
    en vez del esquema por defecto de Tailwind v4 basado en prefers-color-scheme. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ATOYAC Spatial UI — tokens centralizados. */
 :root {
-  --bg: #f5f7fa;
+  --bg: #f2f5f9;
   --surface: #ffffff;
   --card: #ffffff;
   --line: #e2e8f0;
-  --ink: #0f172a;
-  --muted: #64748b;
-  --accent: #0369a1;
+  --ink: #17212e;
+  --muted: #5b6b7d;
+  --accent: #007aff;
+  --accent2: #0d9488;
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(23, 33, 46, 0.08);
 }
 
 .dark {
-  --bg: #0b1120;
-  --surface: #111c2e;
-  --card: #162235;
-  --line: #26364a;
+  --bg: #080c14;
+  --surface: #121a26;
+  --card: #19232f;
+  --line: #232f3f;
   --ink: #f1f5f9;
-  --muted: #94a3b8;
-  --accent: #0ea5e9;
+  --muted: #8ba0b5;
+  --accent: #38bdf8;
+  --accent2: #5eead4;
+  --glass-bg: rgba(25, 35, 47, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
@@ -32,6 +39,7 @@
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-accent2: var(--accent2);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -39,12 +47,49 @@
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
-/* El popup de Leaflet trae su propio blanco fijo; lo adaptamos al tema. */
-.leaflet-popup-content-wrapper,
-.leaflet-popup-tip {
-  background: var(--card);
-  color: var(--ink);
+/* Superficie "vidrio" — translúcida, con desenfoque de fondo y borde sutil.
+   Se usa en tarjetas, paneles flotantes, header y sidebar. */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.dark .glass {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* MapLibre: panel de atribución y controles, adaptados al tema. */
+.maplibregl-ctrl-attrib {
+  background: var(--glass-bg) !important;
+  color: var(--muted) !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--accent) !important;
+}
+.maplibregl-ctrl-group {
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+}
+.maplibregl-ctrl-group button {
+  background: transparent !important;
+}
+.maplibregl-popup-content {
+  background: var(--card) !important;
+  color: var(--ink) !important;
+}
+.maplibregl-popup-tip {
+  border-top-color: var(--card) !important;
+  border-bottom-color: var(--card) !important;
 }

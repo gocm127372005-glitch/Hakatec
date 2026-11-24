@@ -3,7 +3,7 @@ import { StatCard } from "@/components/StatCard";
 import { Reveal } from "@/components/Reveal";
 import { GraficaCalidadAgua } from "@/components/GraficaCalidadAgua";
 import { humedalesAltoAtoyac } from "@/data/humedales";
-import MapaHumedales from "@/components/MapaHumedalesClient";
+import MapaHumedales from "@/components/MapaHumedales3DClient";
 import { Etiqueta } from "@/components/dashboard/Etiqueta";
 import { Panel } from "@/components/dashboard/Panel";
 

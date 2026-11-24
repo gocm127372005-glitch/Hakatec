@@ -16,7 +16,7 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-line bg-card p-4 shadow-sm dark:shadow-none">
+    <div className="glass rounded-2xl p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-sm font-medium text-ink">
           <Icono className="h-4 w-4 text-accent" />

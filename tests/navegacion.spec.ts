@@ -79,13 +79,21 @@ test.describe("Tema claro/oscuro", () => {
   });
 });
 
-test.describe("Mapa", () => {
-  test("el mapa de Leaflet se renderiza con marcadores", async ({ page }) => {
+test.describe("Mapa 3D", () => {
+  test("el mapa de MapLibre se renderiza con marcadores y terreno", async ({ page }) => {
     await page.goto("/dashboard/mapa");
-    await expect(page.locator(".leaflet-container")).toBeVisible();
-    const marcadores = page.locator("path.leaflet-interactive");
-    await expect(marcadores.first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 20_000 });
+    const marcadores = page.locator(".maplibregl-marker");
+    await expect(marcadores.first()).toBeVisible({ timeout: 20_000 });
     expect(await marcadores.count()).toBeGreaterThanOrEqual(10);
+  });
+
+  test("el panel de capas abre y cambia de estilo", async ({ page }) => {
+    await page.goto("/dashboard/mapa");
+    await page.getByRole("button", { name: "Capas y controles del mapa" }).click();
+    await expect(page.getByText("Capa base")).toBeVisible();
+    await page.getByRole("button", { name: "Satélite" }).click();
+    await page.getByRole("button", { name: "Relieve 3D" }).click();
   });
 });
 

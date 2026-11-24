@@ -48,6 +48,7 @@ function Buscador() {
   const [consulta, setConsulta] = useState("");
   const [abierto, setAbierto] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const resultados =
     consulta.trim().length > 0
@@ -61,24 +62,44 @@ function Buscador() {
       }
     };
     document.addEventListener("mousedown", alHacerClicFuera);
-    return () => document.removeEventListener("mousedown", alHacerClicFuera);
+
+    // Atajo tipo Spotlight: Ctrl+K / Cmd+K enfoca el buscador que ya existe
+    // en el header (no es un modal nuevo, es el mismo buscador real).
+    const alPresionarTecla = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setAbierto(true);
+      }
+      if (e.key === "Escape") {
+        inputRef.current?.blur();
+        setAbierto(false);
+      }
+    };
+    document.addEventListener("keydown", alPresionarTecla);
+
+    return () => {
+      document.removeEventListener("mousedown", alHacerClicFuera);
+      document.removeEventListener("keydown", alPresionarTecla);
+    };
   }, []);
 
   return (
-    <div ref={contenedorRef} className="relative hidden w-56 md:block">
+    <div ref={contenedorRef} className="relative hidden w-60 md:block">
       <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
       <input
+        ref={inputRef}
         value={consulta}
         onChange={(e) => {
           setConsulta(e.target.value);
           setAbierto(true);
         }}
         onFocus={() => setAbierto(true)}
-        placeholder="Buscar en el sistema…"
-        className="w-full rounded-md border border-line bg-bg py-1.5 pl-8 pr-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+        placeholder="Buscar… (Ctrl+K)"
+        className="w-full rounded-xl border border-line bg-bg py-1.5 pl-8 pr-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
       />
       {abierto && resultados.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-md border border-line bg-card shadow-lg">
+        <div className="glass absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl">
           {resultados.map((r) => (
             <button
               key={r.href}
@@ -96,7 +117,7 @@ function Buscador() {
         </div>
       )}
       {abierto && consulta.trim().length > 0 && resultados.length === 0 && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-md border border-line bg-card px-3 py-2 text-sm text-muted shadow-lg">
+        <div className="glass absolute left-0 right-0 top-full z-20 mt-1 rounded-xl px-3 py-2 text-sm text-muted">
           Sin resultados
         </div>
       )}
@@ -110,10 +131,10 @@ export function DashboardHeader({ onAbrirMenuMovil }: { onAbrirMenuMovil: () => 
   const [notificacionesAbiertas, setNotificacionesAbiertas] = useState(false);
 
   return (
-    <header className="flex h-16 items-center gap-3 border-b border-line bg-surface/80 px-4 backdrop-blur sm:px-6">
+    <header className="glass flex h-16 items-center gap-3 rounded-b-2xl px-4 sm:px-6">
       <button
         onClick={onAbrirMenuMovil}
-        className="rounded-md p-2 text-muted hover:bg-accent/5 hover:text-ink lg:hidden"
+        className="rounded-xl p-2 text-muted hover:bg-accent/5 hover:text-ink lg:hidden"
         aria-label="Abrir menú de navegación"
       >
         <Menu className="h-5 w-5" />
@@ -128,7 +149,7 @@ export function DashboardHeader({ onAbrirMenuMovil }: { onAbrirMenuMovil: () => 
           className={
             "hidden items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-medium ring-1 sm:flex " +
             (enLinea
-              ? "bg-emerald-500/10 text-emerald-700 ring-emerald-500/20 dark:text-emerald-300"
+              ? "bg-accent2/10 text-accent2 ring-accent2/20"
               : "bg-red-500/10 text-red-700 ring-red-500/20 dark:text-red-300")
           }
         >
@@ -142,13 +163,13 @@ export function DashboardHeader({ onAbrirMenuMovil }: { onAbrirMenuMovil: () => 
         <div className="relative">
           <button
             onClick={() => setNotificacionesAbiertas((v) => !v)}
-            className="rounded-md border border-line bg-surface p-2 text-muted hover:bg-accent/5 hover:text-ink"
+            className="rounded-xl border border-line bg-surface p-2 text-muted hover:bg-accent/5 hover:text-ink"
             aria-label="Notificaciones"
           >
             <Bell className="h-4 w-4" />
           </button>
           {notificacionesAbiertas && (
-            <div className="absolute right-0 top-full z-20 mt-2 w-64 rounded-md border border-line bg-card p-3 text-sm shadow-lg">
+            <div className="glass absolute right-0 top-full z-20 mt-2 w-64 rounded-2xl p-3 text-sm">
               <p className="font-medium text-ink">Notificaciones</p>
               <p className="mt-1 text-xs text-muted">
                 Sin notificaciones — entorno de demostración, aún no hay eventos reales conectados.
@@ -166,7 +187,7 @@ export function DashboardHeader({ onAbrirMenuMovil }: { onAbrirMenuMovil: () => 
             <User className="h-4 w-4" />
           </button>
           {menuUsuarioAbierto && (
-            <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-md border border-line bg-card p-1 text-sm shadow-lg">
+            <div className="glass absolute right-0 top-full z-20 mt-2 w-56 rounded-2xl p-1 text-sm">
               <div className="px-3 py-2">
                 <p className="font-medium text-ink">Invitado</p>
                 <p className="text-xs text-muted">Modo demostración · sin rol asignado</p>
@@ -174,14 +195,14 @@ export function DashboardHeader({ onAbrirMenuMovil }: { onAbrirMenuMovil: () => 
               <div className="my-1 border-t border-line" />
               <Link
                 href="/dashboard/configuracion"
-                className="block rounded px-3 py-1.5 text-ink hover:bg-accent/5"
+                className="block rounded-lg px-3 py-1.5 text-ink hover:bg-accent/5"
                 onClick={() => setMenuUsuarioAbierto(false)}
               >
                 Preferencias
               </Link>
               <Link
                 href="/login"
-                className="block rounded px-3 py-1.5 text-ink hover:bg-accent/5"
+                className="block rounded-lg px-3 py-1.5 text-ink hover:bg-accent/5"
                 onClick={() => setMenuUsuarioAbierto(false)}
               >
                 Iniciar sesión real
