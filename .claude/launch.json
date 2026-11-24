@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "drone-preview",
+      "runtimeExecutable": "drone/.venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "http.server", "8090", "--directory", "drone"],
+      "port": 8090
     }
   ]
 }

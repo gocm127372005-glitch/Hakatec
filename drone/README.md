@@ -65,9 +65,12 @@ hay dos archivos aparte, **sin esa dependencia**:
 
 - **`tello_minimo.py`** — cliente del protocolo del Tello usando solo
   `socket` (viene en cualquier Python). Sin video.
-- **`control_termux.py`** — control por línea de comandos (escribes una
-  letra y Enter — más cómodo para teclado táctil que una tecla mantenida).
-  Mismas protecciones de seguridad que `control_teclado.py`.
+- **`control_web_termux.py`** — **el recomendado**: abre una página con
+  botones grandes en el navegador de tu propio celular (nada de escribir
+  letras). Corre un servidor local dentro de Termux; el navegador solo le
+  habla a `127.0.0.1` (localhost), nunca directo al Tello por UDP.
+- **`control_termux.py`** — alternativa por línea de comandos (letra +
+  Enter), más lenta de usar pero útil si el navegador diera problemas.
 
 ### Instalar Termux
 
@@ -76,7 +79,8 @@ hay dos archivos aparte, **sin esa dependencia**:
 2. Dentro de Termux: `pkg install python git`
 3. Clona el proyecto: `git clone https://github.com/gocm127372005-glitch/Hakatec.git`
 4. `cd Hakatec/drone`
-5. `python control_termux.py`
+5. `python control_web_termux.py`
+6. Abre, en el navegador del **mismo** celular: `http://127.0.0.1:8080`
 
 ### Para que MIUI no mate el proceso
 
