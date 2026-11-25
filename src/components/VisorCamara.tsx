@@ -13,14 +13,14 @@ export function VisorCamara({ url }: { url: string }) {
 
     setError(null);
 
-    // Safari reproduce HLS de forma nativa; el resto de navegadores necesita hls.js.
-    if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = url;
-      return;
-    }
-
+    // hls.js primero (más control, mejor manejo de errores) — es el orden
+    // que la propia librería recomienda. El <video> nativo solo se usa de
+    // respaldo para navegadores donde hls.js no corre (iOS Safari, que no
+    // permite Media Source Extensions a terceros).
     if (Hls.isSupported()) {
-      const hls = new Hls();
+      // lowLatencyMode + un buffer de sincronización corto reducen el
+      // delay de "en vivo" a costa de tolerar menos variaciones de red.
+      const hls = new Hls({ lowLatencyMode: true, liveSyncDurationCount: 2 });
       hls.loadSource(url);
       hls.attachMedia(video);
       hls.on(Hls.Events.ERROR, (_evento, datos) => {
@@ -31,7 +31,11 @@ export function VisorCamara({ url }: { url: string }) {
       return () => hls.destroy();
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- el soporte de HLS solo se puede saber tras montar, no se deriva de props
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = url;
+      return;
+    }
+
     setError("Este navegador no puede reproducir la transmisión (HLS).");
   }, [url]);
 

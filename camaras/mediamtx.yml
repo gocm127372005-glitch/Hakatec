@@ -7,9 +7,15 @@
 #    En Windows, el .zip "windows_amd64".
 # 2. Copia este archivo junto al ejecutable, renómbralo a "mediamtx.yml"
 #    (reemplazando el que trae por defecto).
-# 3. Reemplaza USUARIO, CONTRASENA e IP_DE_LA_CAMARA abajo por los datos
-#    reales de tu cámara (ver cómo conseguirlos más abajo).
-# 4. Corre mediamtx.exe. Mientras se quede abierto, deja disponible:
+# 3. La cámara Tapo manda el audio en G711 (códec que los navegadores no
+#    pueden reproducir), así que no se conecta directo a MediaMTX: un
+#    ffmpeg intermedio jala el RTSP de la cámara, descarta el audio, y le
+#    publica solo el video a este MediaMTX por RTSP local (ver abajo). Por
+#    eso el path "trampa-rio" no tiene "source": espera que algo le
+#    publique, en vez de jalar él mismo de la cámara.
+# 4. Corre mediamtx.exe primero. Luego, en otra terminal:
+#      ffmpeg -rtsp_transport tcp -i "rtsp://USUARIO:CONTRASENA@IP_DE_LA_CAMARA:554/stream2" -an -c:v copy -f rtsp rtsp://localhost:8554/trampa-rio
+#    Mientras ese ffmpeg se quede abierto, MediaMTX deja disponible:
 #      HLS:    http://localhost:8888/trampa-rio/index.m3u8
 #      WebRTC: http://localhost:8889/trampa-rio
 # 5. Pon esa URL HLS en la variable de entorno NEXT_PUBLIC_CAMARA_STREAM_URL
@@ -20,10 +26,13 @@
 # dashboard desplegado en Vercel vive en internet y NO puede alcanzar
 # "localhost" ni una IP privada (192.168.x.x) de tu casa. Para que el sitio
 # en línea muestre el video en vivo durante la demo, necesitas exponer el
-# puerto 8888 hacia internet — la forma más simple es un túnel gratuito como
-# ngrok (https://ngrok.com): "ngrok http 8888" te da una URL pública
-# temporal que apunta a tu MediaMTX; usa esa URL + "/trampa-rio/index.m3u8"
-# como NEXT_PUBLIC_CAMARA_STREAM_URL mientras dure la demo.
+# puerto 8888 hacia internet — la forma más simple sin crear cuenta es un
+# túnel rápido de Cloudflare: descarga cloudflared
+# (https://github.com/cloudflare/cloudflared/releases) y corre
+# "cloudflared tunnel --url http://localhost:8888"; te da una URL pública
+# temporal (https://algo.trycloudflare.com) que apunta a tu MediaMTX. Usa
+# esa URL + "/trampa-rio/index.m3u8" como NEXT_PUBLIC_CAMARA_STREAM_URL
+# mientras dure la demo (cambia cada vez que reinicies el túnel).
 #
 # Cómo conseguir usuario/contraseña RTSP de la cámara Tapo:
 #   App Tapo → selecciona tu cámara → ⚙️ (ajustes) → Configuración avanzada
@@ -34,8 +43,10 @@
 #   Misma pantalla de Configuración avanzada → Estado del dispositivo, o
 #   en la lista de dispositivos conectados de tu router.
 
+# LL-HLS (segmentos cortos + partes) para minimizar el delay de "en vivo".
+hlsSegmentDuration: 500ms
+hlsPartDuration: 150ms
+hlsSegmentCount: 7
+
 paths:
-  trampa-rio:
-    # "stream2" es la subcorriente (menor resolución/bitrate) de la Tapo —
-    # conviene para un relay simple. Usa "stream1" si quieres la calidad alta.
-    source: rtsp://USUARIO:CONTRASENA@IP_DE_LA_CAMARA:554/stream2
+  trampa-rio: {}

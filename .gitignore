@@ -51,3 +51,4 @@ next-env.d.ts
 # ver camaras/mediamtx.yml para la plantilla sin credenciales que sí se versiona.
 /camaras/mediamtx/
 /camaras/ffmpeg/
+/camaras/cloudflared/
