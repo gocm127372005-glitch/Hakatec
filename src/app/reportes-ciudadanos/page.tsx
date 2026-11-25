@@ -4,25 +4,62 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ClipboardList, Waves, Info } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { isSupabaseConfigured, crearClienteSupabase } from "@/lib/supabase/client";
 
 const TIPOS = [
   "Basura acumulada en el río",
   "Descarga de aguas residuales",
   "Mal olor",
   "Lirio acuático / plantas invasoras",
+  "Posible desbordamiento",
   "Otro",
 ];
 
 export default function ReportesCiudadanosPage() {
   const [enviado, setEnviado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [folio, setFolio] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [descripcion, setDescripcion] = useState("");
   const [tipo, setTipo] = useState(TIPOS[0]);
   const [ubicacion, setUbicacion] = useState("");
 
-  const enviar = (e: FormEvent) => {
+  const enviar = async (e: FormEvent) => {
     e.preventDefault();
-    setEnviado(true);
+    setError(null);
+
+    if (!isSupabaseConfigured) {
+      setEnviado(true);
+      return;
+    }
+
+    setEnviando(true);
+    try {
+      const supabase = crearClienteSupabase();
+      const { data, error: errorInsert } = await supabase
+        .from("reportes")
+        .insert({
+          tipo,
+          descripcion,
+          ubicacion_texto: ubicacion,
+          fuente: "web",
+        })
+        .select("folio")
+        .single();
+
+      if (errorInsert) throw errorInsert;
+
+      setFolio(data.folio);
+      setEnviado(true);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo enviar el reporte. Intenta de nuevo."
+      );
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -55,13 +92,20 @@ export default function ReportesCiudadanosPage() {
         {enviado ? (
           <div className="mt-6 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-6 text-center">
             <p className="font-medium text-emerald-700 dark:text-emerald-300">
-              {isSupabaseConfigured ? "Reporte recibido." : "Formulario validado (modo demostración)."}
+              {folio ? "Reporte recibido." : "Formulario validado (modo demostración)."}
             </p>
-            <p className="mt-1 text-sm text-muted">
-              {isSupabaseConfigured
-                ? "Folio de seguimiento: se generará al conectar la base de datos."
-                : "No se guardó en ningún lado — este despliegue aún no tiene base de datos conectada."}
-            </p>
+            {folio ? (
+              <>
+                <p className="mt-2 text-lg font-semibold tracking-wide text-ink">{folio}</p>
+                <p className="mt-1 text-sm text-muted">
+                  Guarda este folio para consultar el estado de tu reporte más adelante.
+                </p>
+              </>
+            ) : (
+              <p className="mt-1 text-sm text-muted">
+                No se guardó en ningún lado — este despliegue aún no tiene base de datos conectada.
+              </p>
+            )}
           </div>
         ) : (
           <form onSubmit={enviar} className="mt-6 space-y-4 rounded-xl border border-line bg-card p-5">
@@ -103,11 +147,17 @@ export default function ReportesCiudadanosPage() {
               <ClipboardList className="h-3.5 w-3.5" />
               No incluyas tu nombre, teléfono ni otros datos personales.
             </p>
+            {error && (
+              <p className="rounded-lg border border-red-500/20 bg-red-500/10 p-2.5 text-xs text-red-700 dark:text-red-300">
+                {error}
+              </p>
+            )}
             <button
               type="submit"
-              className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+              disabled={enviando}
+              className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
             >
-              Enviar reporte
+              {enviando ? "Enviando…" : "Enviar reporte"}
             </button>
           </form>
         )}
