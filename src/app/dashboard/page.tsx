@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Droplets, MapPinned, ShieldCheck, Waves, Cpu, Activity } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { Reveal } from "@/components/Reveal";
@@ -12,11 +13,10 @@ import { COLUMNAS_LECTURA_SENSOR, type LecturaSensor } from "@/lib/sensores";
 
 export const metadata = { title: "Centro de operaciones — Atoyac" };
 
-export default async function CentroOperacionesPage() {
+export default function CentroOperacionesPage() {
   const conDatosReales = humedalesAltoAtoyac.filter((h) => h.agua !== null);
   const sitiosRamsar = humedalesAltoAtoyac.filter((h) => h.sitioRamsar);
   const areaTotal = humedalesAltoAtoyac.reduce((acc, h) => acc + h.areaKm2, 0);
-  const ultimaLectura = await obtenerUltimaLectura();
 
   return (
     <div className="space-y-4">
@@ -76,55 +76,9 @@ export default async function CentroOperacionesPage() {
 
       {/* Fila 4: calidad del agua + dispositivos */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Reveal delay={0.2}>
-          <Panel
-            titulo="Calidad del agua — trampa ESP32"
-            icono={Droplets}
-            etiqueta={ultimaLectura ? "real" : "simulado"}
-            fuenteEtiqueta={ultimaLectura ? "ESP32" : undefined}
-          >
-            {ultimaLectura ? (
-              <p className="mb-2 text-sm text-muted">
-                Última lectura: {new Date(ultimaLectura.creado_en).toLocaleString("es-MX")} · Temp.{" "}
-                {ultimaLectura.temperatura_c?.toFixed(1) ?? "—"}°C · pH {ultimaLectura.ph?.toFixed(1) ?? "—"} ·{" "}
-                <a href="/dashboard/calidad-agua" className="text-accent underline">
-                  ver detalle
-                </a>
-              </p>
-            ) : (
-              <p className="mb-2 text-sm text-muted">Turbidez de ejemplo mientras se conecta el ESP32.</p>
-            )}
-            <GraficaCalidadAgua />
-          </Panel>
-        </Reveal>
-        <Reveal delay={0.25}>
-          <Panel
-            titulo="Dispositivos IoT"
-            icono={Cpu}
-            etiqueta={ultimaLectura ? "real" : "simulado"}
-            fuenteEtiqueta={ultimaLectura ? "ESP32" : undefined}
-          >
-            {ultimaLectura ? (
-              <p className="text-sm text-muted">
-                Trampa <span className="font-mono text-xs">{ultimaLectura.dispositivo_id}</span> enviando
-                telemetría — ver{" "}
-                <a href="/dashboard/dispositivos" className="text-accent underline">
-                  Dispositivos IoT
-                </a>
-                .
-              </p>
-            ) : (
-              <p className="text-sm text-muted">
-                0 dispositivos registrados. El módulo de dispositivos ESP32/LoRa
-                está listo para recibirlos — ver{" "}
-                <a href="/dashboard/dispositivos" className="text-accent underline">
-                  Dispositivos IoT
-                </a>
-                .
-              </p>
-            )}
-          </Panel>
-        </Reveal>
+        <Suspense fallback={<FilaCalidadFallback />}>
+          <PanelesCalidadYDispositivos />
+        </Suspense>
       </div>
 
       {/* Fila 5: inventario de humedales + actividad reciente */}
@@ -152,6 +106,77 @@ export default async function CentroOperacionesPage() {
         </Reveal>
       </div>
     </div>
+  );
+}
+
+function FilaCalidadFallback() {
+  return (
+    <>
+      <Panel titulo="Calidad del agua — trampa ESP32" icono={Droplets} etiqueta="simulado">
+        <p className="text-sm text-muted">Cargando…</p>
+      </Panel>
+      <Panel titulo="Dispositivos IoT" icono={Cpu} etiqueta="simulado">
+        <p className="text-sm text-muted">Cargando…</p>
+      </Panel>
+    </>
+  );
+}
+
+async function PanelesCalidadYDispositivos() {
+  const ultimaLectura = await obtenerUltimaLectura();
+
+  return (
+    <>
+      <Reveal delay={0.2}>
+        <Panel
+          titulo="Calidad del agua — trampa ESP32"
+          icono={Droplets}
+          etiqueta={ultimaLectura ? "real" : "simulado"}
+          fuenteEtiqueta={ultimaLectura ? "ESP32" : undefined}
+        >
+          {ultimaLectura ? (
+            <p className="mb-2 text-sm text-muted">
+              Última lectura: {new Date(ultimaLectura.creado_en).toLocaleString("es-MX")} · Temp.{" "}
+              {ultimaLectura.temperatura_c?.toFixed(1) ?? "—"}°C · pH {ultimaLectura.ph?.toFixed(1) ?? "—"} ·{" "}
+              <a href="/dashboard/calidad-agua" className="text-accent underline">
+                ver detalle
+              </a>
+            </p>
+          ) : (
+            <p className="mb-2 text-sm text-muted">Turbidez de ejemplo mientras se conecta el ESP32.</p>
+          )}
+          <GraficaCalidadAgua />
+        </Panel>
+      </Reveal>
+      <Reveal delay={0.25}>
+        <Panel
+          titulo="Dispositivos IoT"
+          icono={Cpu}
+          etiqueta={ultimaLectura ? "real" : "simulado"}
+          fuenteEtiqueta={ultimaLectura ? "ESP32" : undefined}
+        >
+          {ultimaLectura ? (
+            <p className="text-sm text-muted">
+              Trampa <span className="font-mono text-xs">{ultimaLectura.dispositivo_id}</span> enviando
+              telemetría — ver{" "}
+              <a href="/dashboard/dispositivos" className="text-accent underline">
+                Dispositivos IoT
+              </a>
+              .
+            </p>
+          ) : (
+            <p className="text-sm text-muted">
+              0 dispositivos registrados. El módulo de dispositivos ESP32/LoRa
+              está listo para recibirlos — ver{" "}
+              <a href="/dashboard/dispositivos" className="text-accent underline">
+                Dispositivos IoT
+              </a>
+              .
+            </p>
+          )}
+        </Panel>
+      </Reveal>
+    </>
   );
 }
 

@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { Droplets, FlaskConical } from "lucide-react";
 import { Panel } from "@/components/dashboard/Panel";
 import { Etiqueta } from "@/components/dashboard/Etiqueta";
 import { GraficaCalidadAgua } from "@/components/GraficaCalidadAgua";
+import { GraficaLectura, type PuntoLectura } from "@/components/GraficaLectura";
 import { humedalesAltoAtoyac } from "@/data/humedales";
 import { crearClienteSupabaseServidor, isSupabaseConfigured } from "@/lib/supabase/server";
 import {
@@ -14,10 +16,85 @@ import {
 
 export const metadata = { title: "Calidad del agua — Atoyac" };
 
-export default async function CalidadAguaPage() {
+export default function CalidadAguaPage() {
   const conDatos = humedalesAltoAtoyac.filter((h) => h.agua !== null);
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-xl font-semibold text-ink">Calidad del agua</h1>
+        <p className="text-sm text-muted">
+          Ningún parámetro se muestra como medido en tiempo real a menos que exista instrumentación real conectada.
+        </p>
+      </div>
+
+      <Suspense fallback={<ParametrosFallback />}>
+        <ParametrosYLecturas />
+      </Suspense>
+
+      <Panel titulo="Mediciones históricas in situ (reales)" icono={Droplets} etiqueta="real">
+        <p className="mb-3 text-sm text-muted">
+          No son lecturas de sensores en tiempo real: son mediciones de campo
+          reportadas por INEGI (2019) en 2 de los 10 humedales. Se muestran
+          como referencia histórica, con fecha y fuente.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-line text-xs uppercase text-muted">
+                <th className="py-2 pr-4">Humedal</th>
+                <th className="py-2 pr-4">pH</th>
+                <th className="py-2 pr-4">Conductividad (mS/cm)</th>
+                <th className="py-2 pr-4">STD (mg/l)</th>
+                <th className="py-2 pr-4">O₂ disuelto (mg/l)</th>
+                <th className="py-2 pr-4">Fuente</th>
+              </tr>
+            </thead>
+            <tbody>
+              {conDatos.map((h) => (
+                <tr key={h.id} className="border-b border-line/50">
+                  <td className="py-2 pr-4 text-ink">{h.nombre}</td>
+                  <td className="py-2 pr-4 text-ink">{h.agua?.pH}</td>
+                  <td className="py-2 pr-4 text-ink">{h.agua?.conductividad_mS_cm}</td>
+                  <td className="py-2 pr-4 text-ink">{h.agua?.solidosDisueltosTotales_mgL}</td>
+                  <td className="py-2 pr-4 text-ink">{h.agua?.oxigenoDisuelto_mgL}</td>
+                  <td className="py-2 pr-4 text-muted">{h.fuente}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+
+      <p className="text-sm text-muted">
+        ¿Por qué el agua está así? Ver{" "}
+        <a href="/dashboard/causas" className="text-accent underline">
+          causas documentadas de contaminación
+        </a>{" "}
+        (giros industriales, parámetros excedidos, fuentes citadas).
+      </p>
+    </div>
+  );
+}
+
+function ParametrosFallback() {
+  return (
+    <Panel titulo="Parámetros contemplados" icono={FlaskConical} etiqueta="simulado">
+      <p className="text-sm text-muted">Cargando…</p>
+    </Panel>
+  );
+}
+
+async function ParametrosYLecturas() {
   const lecturas = await obtenerLecturasRecientes();
   const ultima = lecturas[0] ?? null;
+  const cronologicas = [...lecturas].reverse();
+
+  const serieDe = (campo: "ph" | "turbidez_ntu" | "temperatura_c" | "conductividad_us_cm" | "distancia_cm"): PuntoLectura[] =>
+    cronologicas.map((l) => ({
+      hora: new Date(l.creado_en).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+      valor: l[campo],
+    }));
 
   const PARAMETROS = [
     {
@@ -60,14 +137,7 @@ export default async function CalidadAguaPage() {
   ];
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold text-ink">Calidad del agua</h1>
-        <p className="text-sm text-muted">
-          Ningún parámetro se muestra como medido en tiempo real a menos que exista instrumentación real conectada.
-        </p>
-      </div>
-
+    <>
       <Panel
         titulo="Parámetros contemplados"
         icono={FlaskConical}
@@ -114,7 +184,7 @@ export default async function CalidadAguaPage() {
                 </tr>
               </thead>
               <tbody>
-                {lecturas.map((l) => {
+                {lecturas.slice(0, 20).map((l) => {
                   const estado = (l.estado as EstadoLectura) ?? "normal";
                   return (
                     <tr key={l.id} className="border-b border-line/50">
@@ -142,60 +212,35 @@ export default async function CalidadAguaPage() {
         </Panel>
       )}
 
-      <Panel titulo="Mediciones históricas in situ (reales)" icono={Droplets} etiqueta="real">
-        <p className="mb-3 text-sm text-muted">
-          No son lecturas de sensores en tiempo real: son mediciones de campo
-          reportadas por INEGI (2019) en 2 de los 10 humedales. Se muestran
-          como referencia histórica, con fecha y fuente.
-        </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-line text-xs uppercase text-muted">
-                <th className="py-2 pr-4">Humedal</th>
-                <th className="py-2 pr-4">pH</th>
-                <th className="py-2 pr-4">Conductividad (mS/cm)</th>
-                <th className="py-2 pr-4">STD (mg/l)</th>
-                <th className="py-2 pr-4">O₂ disuelto (mg/l)</th>
-                <th className="py-2 pr-4">Fuente</th>
-              </tr>
-            </thead>
-            <tbody>
-              {conDatos.map((h) => (
-                <tr key={h.id} className="border-b border-line/50">
-                  <td className="py-2 pr-4 text-ink">{h.nombre}</td>
-                  <td className="py-2 pr-4 text-ink">{h.agua?.pH}</td>
-                  <td className="py-2 pr-4 text-ink">{h.agua?.conductividad_mS_cm}</td>
-                  <td className="py-2 pr-4 text-ink">{h.agua?.solidosDisueltosTotales_mgL}</td>
-                  <td className="py-2 pr-4 text-ink">{h.agua?.oxigenoDisuelto_mgL}</td>
-                  <td className="py-2 pr-4 text-muted">{h.fuente}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-
-      <Panel titulo="Turbidez — serie simulada" icono={Droplets} etiqueta="simulado">
-        <p className="mb-2 text-sm text-muted">
-          Ejemplo de cómo se vería la gráfica una vez que el ESP32 envíe datos
-          reales a Supabase. Sin filtros temporales todavía porque no hay
-          datos reales que filtrar.
-        </p>
-        <GraficaCalidadAgua />
-        <p className="mt-2 text-[11px] text-muted">
-          <Etiqueta tipo="simulado" /> Datos de ejemplo, no provienen de ningún dispositivo.
-        </p>
-      </Panel>
-
-      <p className="text-sm text-muted">
-        ¿Por qué el agua está así? Ver{" "}
-        <a href="/dashboard/causas" className="text-accent underline">
-          causas documentadas de contaminación
-        </a>{" "}
-        (giros industriales, parámetros excedidos, fuentes citadas).
-      </p>
-    </div>
+      {lecturas.length > 0 ? (
+        <Panel titulo="Gráficas — trampa ESP32" icono={Droplets} etiqueta="real" fuenteEtiqueta="ESP32">
+          <p className="mb-3 text-sm text-muted">
+            Últimas {cronologicas.length} lecturas. Nivel, pH, turbidez y
+            conductividad vienen del mismo nivel de agua (todavía simulado);
+            temperatura es la lectura real del NTC.
+          </p>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <GraficaLectura titulo="Nivel de agua" unidad="cm" color="#38bdf8" datos={serieDe("distancia_cm")} />
+            <GraficaLectura titulo="Temperatura" unidad="°C" color="#f97316" datos={serieDe("temperatura_c")} />
+            <GraficaLectura titulo="pH" unidad="—" color="#a78bfa" datos={serieDe("ph")} />
+            <GraficaLectura titulo="Turbidez" unidad="NTU" color="#fbbf24" datos={serieDe("turbidez_ntu")} />
+            <GraficaLectura titulo="Conductividad" unidad="µS/cm" color="#34d399" datos={serieDe("conductividad_us_cm")} />
+          </div>
+        </Panel>
+      ) : (
+        <Panel titulo="Turbidez — serie simulada" icono={Droplets} etiqueta="simulado">
+          <p className="mb-2 text-sm text-muted">
+            Ejemplo de cómo se vería la gráfica una vez que el ESP32 envíe datos
+            reales a Supabase. Sin filtros temporales todavía porque no hay
+            datos reales que filtrar.
+          </p>
+          <GraficaCalidadAgua />
+          <p className="mt-2 text-[11px] text-muted">
+            <Etiqueta tipo="simulado" /> Datos de ejemplo, no provienen de ningún dispositivo.
+          </p>
+        </Panel>
+      )}
+    </>
   );
 }
 
@@ -208,7 +253,7 @@ async function obtenerLecturasRecientes(): Promise<LecturaSensor[]> {
     .from("lecturas_sensores")
     .select(COLUMNAS_LECTURA_SENSOR)
     .order("creado_en", { ascending: false })
-    .limit(20);
+    .limit(60);
 
   if (error || !data) return [];
   return data as unknown as LecturaSensor[];

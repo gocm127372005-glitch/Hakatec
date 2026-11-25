@@ -16,10 +16,15 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 
-// ---------- WiFi (cambia esto por tu red real) ----------
-const char* WIFI_SSID = "TU_RED_WIFI";
+// ---------- WiFi ----------
+// IMPORTANTE: el ESP32 (y el chip del LilyGO T3) solo tiene radio de 2.4 GHz,
+// NO soporta redes de 5 GHz. Si tu red es dual-band ("...-5G" / "...5G" es
+// casi siempre el nombre de la banda de 5 GHz), usa el SSID de la banda de
+// 2.4 GHz en vez de ese — si no, el ESP32 ni siquiera la va a ver al escanear.
+const char* WIFI_SSID = "TU_RED_WIFI_2.4GHZ";
 const char* WIFI_PASSWORD = "TU_CONTRASENA_WIFI";
 
 // ---------- Supabase ----------
@@ -179,9 +184,19 @@ void enviarLecturaASupabase() {
     return;
   }
 
+  // https:// en el ESP32 necesita un WiFiClientSecure explícito; con
+  // HTTPClient a secas el handshake TLS falla siempre (POST nunca llega).
+  // setInsecure() no valida el certificado del servidor — aceptable aquí
+  // porque solo se manda la anon key pública, no hay credenciales secretas.
+  WiFiClientSecure clienteSeguro;
+  clienteSeguro.setInsecure();
+
   HTTPClient http;
   String url = String(SUPABASE_URL) + "/rest/v1/lecturas_sensores";
-  http.begin(url);
+  if (!http.begin(clienteSeguro, url)) {
+    Serial.println("No se pudo iniciar la conexión HTTPS a Supabase.");
+    return;
+  }
   http.addHeader("Content-Type", "application/json");
   http.addHeader("apikey", SUPABASE_ANON_KEY);
   http.addHeader("Authorization", String("Bearer ") + SUPABASE_ANON_KEY);

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Cpu } from "lucide-react";
 import { PaginaPendiente } from "@/components/dashboard/PaginaPendiente";
 import { Panel } from "@/components/dashboard/Panel";
@@ -6,7 +7,15 @@ import { COLUMNAS_LECTURA_SENSOR, dispositivoEnLinea, type LecturaSensor } from 
 
 export const metadata = { title: "Dispositivos IoT — Atoyac" };
 
-export default async function DispositivosPage() {
+export default function DispositivosPage() {
+  return (
+    <Suspense fallback={<p className="py-6 text-sm text-muted">Cargando dispositivos…</p>}>
+      <DispositivosContenido />
+    </Suspense>
+  );
+}
+
+async function DispositivosContenido() {
   const dispositivos = await obtenerUltimaLecturaPorDispositivo();
 
   if (dispositivos.length === 0) {
