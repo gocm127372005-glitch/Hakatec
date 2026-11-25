@@ -4,15 +4,19 @@ import { Reveal } from "@/components/Reveal";
 import { GraficaCalidadAgua } from "@/components/GraficaCalidadAgua";
 import { humedalesAltoAtoyac } from "@/data/humedales";
 import MapaHumedales from "@/components/MapaHumedales3DClient";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Etiqueta } from "@/components/dashboard/Etiqueta";
 import { Panel } from "@/components/dashboard/Panel";
+import { crearClienteSupabaseServidor, isSupabaseConfigured } from "@/lib/supabase/server";
+import { COLUMNAS_LECTURA_SENSOR, type LecturaSensor } from "@/lib/sensores";
 
 export const metadata = { title: "Centro de operaciones — Atoyac" };
 
-export default function CentroOperacionesPage() {
+export default async function CentroOperacionesPage() {
   const conDatosReales = humedalesAltoAtoyac.filter((h) => h.agua !== null);
   const sitiosRamsar = humedalesAltoAtoyac.filter((h) => h.sitioRamsar);
   const areaTotal = humedalesAltoAtoyac.reduce((acc, h) => acc + h.areaKm2, 0);
+  const ultimaLectura = await obtenerUltimaLectura();
 
   return (
     <div className="space-y-4">
@@ -53,7 +57,9 @@ export default function CentroOperacionesPage() {
               <Etiqueta tipo="real" />
             </div>
             <div className="flex-1 overflow-hidden rounded-b-xl">
-              <MapaHumedales />
+              <ErrorBoundary fallbackTitulo="El mapa no pudo cargar en este equipo.">
+                <MapaHumedales />
+              </ErrorBoundary>
             </div>
           </section>
         </Reveal>
@@ -71,21 +77,52 @@ export default function CentroOperacionesPage() {
       {/* Fila 4: calidad del agua + dispositivos */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Reveal delay={0.2}>
-          <Panel titulo="Calidad del agua — trampa ESP32" icono={Droplets} etiqueta="simulado">
-            <p className="mb-2 text-sm text-muted">Turbidez de ejemplo mientras se conecta el ESP32.</p>
+          <Panel
+            titulo="Calidad del agua — trampa ESP32"
+            icono={Droplets}
+            etiqueta={ultimaLectura ? "real" : "simulado"}
+            fuenteEtiqueta={ultimaLectura ? "ESP32" : undefined}
+          >
+            {ultimaLectura ? (
+              <p className="mb-2 text-sm text-muted">
+                Última lectura: {new Date(ultimaLectura.creado_en).toLocaleString("es-MX")} · Temp.{" "}
+                {ultimaLectura.temperatura_c?.toFixed(1) ?? "—"}°C · pH {ultimaLectura.ph?.toFixed(1) ?? "—"} ·{" "}
+                <a href="/dashboard/calidad-agua" className="text-accent underline">
+                  ver detalle
+                </a>
+              </p>
+            ) : (
+              <p className="mb-2 text-sm text-muted">Turbidez de ejemplo mientras se conecta el ESP32.</p>
+            )}
             <GraficaCalidadAgua />
           </Panel>
         </Reveal>
         <Reveal delay={0.25}>
-          <Panel titulo="Dispositivos IoT" icono={Cpu} etiqueta="simulado">
-            <p className="text-sm text-muted">
-              0 dispositivos registrados. El módulo de dispositivos ESP32/LoRa
-              está listo para recibirlos — ver{" "}
-              <a href="/dashboard/dispositivos" className="text-accent underline">
-                Dispositivos IoT
-              </a>
-              .
-            </p>
+          <Panel
+            titulo="Dispositivos IoT"
+            icono={Cpu}
+            etiqueta={ultimaLectura ? "real" : "simulado"}
+            fuenteEtiqueta={ultimaLectura ? "ESP32" : undefined}
+          >
+            {ultimaLectura ? (
+              <p className="text-sm text-muted">
+                Trampa <span className="font-mono text-xs">{ultimaLectura.dispositivo_id}</span> enviando
+                telemetría — ver{" "}
+                <a href="/dashboard/dispositivos" className="text-accent underline">
+                  Dispositivos IoT
+                </a>
+                .
+              </p>
+            ) : (
+              <p className="text-sm text-muted">
+                0 dispositivos registrados. El módulo de dispositivos ESP32/LoRa
+                está listo para recibirlos — ver{" "}
+                <a href="/dashboard/dispositivos" className="text-accent underline">
+                  Dispositivos IoT
+                </a>
+                .
+              </p>
+            )}
           </Panel>
         </Reveal>
       </div>
@@ -116,4 +153,20 @@ export default function CentroOperacionesPage() {
       </div>
     </div>
   );
+}
+
+async function obtenerUltimaLectura(): Promise<LecturaSensor | null> {
+  if (!isSupabaseConfigured) return null;
+  const supabase = await crearClienteSupabaseServidor();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("lecturas_sensores")
+    .select(COLUMNAS_LECTURA_SENSOR)
+    .order("creado_en", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as unknown as LecturaSensor;
 }

@@ -1,6 +1,7 @@
 import { MapPinned } from "lucide-react";
 import { Panel } from "@/components/dashboard/Panel";
 import MapaHumedales from "@/components/MapaHumedales3DClient";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export const metadata = { title: "Mapa interactivo — Atoyac" };
 
@@ -21,7 +22,9 @@ export default function MapaPage() {
           correspondiente, sin inventar su contenido.
         </p>
         <div className="h-[560px] overflow-hidden rounded-lg border border-line">
-          <MapaHumedales />
+          <ErrorBoundary fallbackTitulo="El mapa no pudo cargar en este equipo.">
+            <MapaHumedales />
+          </ErrorBoundary>
         </div>
       </Panel>
     </div>

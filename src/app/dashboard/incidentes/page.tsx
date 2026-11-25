@@ -1,31 +1,42 @@
+import { Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
 import { Panel } from "@/components/dashboard/Panel";
+import { FiltrosIncidentes } from "./FiltrosIncidentes";
+import { ListaIncidentes } from "./ListaIncidentes";
 
 export const metadata = { title: "Incidentes — Atoyac" };
 
-const ETAPAS = ["Detectado", "Pendiente de revisión", "Asignado", "En atención", "Resuelto"];
-
-export default function IncidentesPage() {
+export default function IncidentesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ estado?: string; tipo?: string; institucion?: string }>;
+}) {
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-semibold text-ink">Incidentes</h1>
-        <p className="text-sm text-muted">0 incidentes registrados.</p>
-      </div>
-      <Panel titulo="Flujo de atención" icono={AlertTriangle} etiqueta="propuesto">
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          {ETAPAS.map((etapa, i) => (
-            <span key={etapa} className="flex items-center gap-2">
-              <span className="rounded-full border border-line px-3 py-1 text-ink">{etapa}</span>
-              {i < ETAPAS.length - 1 && <span className="text-muted">→</span>}
-            </span>
-          ))}
-        </div>
-        <p className="mt-3 text-sm text-muted">
-          Este flujo todavía no mueve registros reales: falta la tabla de
-          incidentes en Supabase y un responsable asignable por rol.
+        <p className="text-sm text-muted">
+          Reportes ciudadanos (formulario web y WhatsApp), filtrables por
+          institución destino en vez de un login separado por dependencia.
         </p>
+      </div>
+      <Panel titulo="Reportes recibidos" icono={AlertTriangle} etiqueta="real" fuenteEtiqueta="Supabase">
+        <Suspense fallback={<FiltrosIncidentes />}>
+          <FiltrosConValores searchParams={searchParams} />
+        </Suspense>
+        <Suspense fallback={<p className="py-6 text-sm text-muted">Cargando reportes…</p>}>
+          <ListaIncidentes searchParams={searchParams} />
+        </Suspense>
       </Panel>
     </div>
   );
+}
+
+async function FiltrosConValores({
+  searchParams,
+}: {
+  searchParams: Promise<{ estado?: string; tipo?: string; institucion?: string }>;
+}) {
+  const { estado, tipo, institucion } = await searchParams;
+  return <FiltrosIncidentes estado={estado} tipo={tipo} institucion={institucion} />;
 }

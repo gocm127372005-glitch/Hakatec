@@ -94,7 +94,10 @@ export default function MapaHumedales3D() {
   const { resolvedTheme } = useTheme();
 
   const [estilo, setEstilo] = useState<EstiloId>("oscuro");
-  const [relieve3D, setRelieve3D] = useState(true);
+  // Por defecto en 2D: el terreno 3D (WebGL pesado) puede tronar el
+  // navegador en equipos con GPU limitada. Se puede activar manualmente
+  // desde el panel de capas.
+  const [relieve3D, setRelieve3D] = useState(false);
   const [exageracion, setExageracion] = useState(1.5);
   const [panelAbierto, setPanelAbierto] = useState(false);
   const [listo, setListo] = useState(false);
