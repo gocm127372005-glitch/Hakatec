@@ -1,0 +1,41 @@
+# MediaMTX: toma la transmisión RTSP de la cámara Tapo y la vuelve a exponer
+# como HLS (y WebRTC) para que el navegador la pueda reproducir — los
+# navegadores no pueden reproducir RTSP directo, por eso hace falta este paso.
+#
+# 1. Descarga MediaMTX (gratis, un solo ejecutable, sin instalación):
+#      https://github.com/bluenviron/mediamtx/releases
+#    En Windows, el .zip "windows_amd64".
+# 2. Copia este archivo junto al ejecutable, renómbralo a "mediamtx.yml"
+#    (reemplazando el que trae por defecto).
+# 3. Reemplaza USUARIO, CONTRASENA e IP_DE_LA_CAMARA abajo por los datos
+#    reales de tu cámara (ver cómo conseguirlos más abajo).
+# 4. Corre mediamtx.exe. Mientras se quede abierto, deja disponible:
+#      HLS:    http://localhost:8888/trampa-rio/index.m3u8
+#      WebRTC: http://localhost:8889/trampa-rio
+# 5. Pon esa URL HLS en la variable de entorno NEXT_PUBLIC_CAMARA_STREAM_URL
+#    (en .env.local para probar local, y en Vercel → Settings →
+#    Environment Variables para que se vea en producción).
+#
+# IMPORTANTE: MediaMTX corre en tu computadora, dentro de tu red local. El
+# dashboard desplegado en Vercel vive en internet y NO puede alcanzar
+# "localhost" ni una IP privada (192.168.x.x) de tu casa. Para que el sitio
+# en línea muestre el video en vivo durante la demo, necesitas exponer el
+# puerto 8888 hacia internet — la forma más simple es un túnel gratuito como
+# ngrok (https://ngrok.com): "ngrok http 8888" te da una URL pública
+# temporal que apunta a tu MediaMTX; usa esa URL + "/trampa-rio/index.m3u8"
+# como NEXT_PUBLIC_CAMARA_STREAM_URL mientras dure la demo.
+#
+# Cómo conseguir usuario/contraseña RTSP de la cámara Tapo:
+#   App Tapo → selecciona tu cámara → ⚙️ (ajustes) → Configuración avanzada
+#   → Cuenta de cámara → crea un usuario y contraseña LOCALES (son
+#   distintos a los de tu cuenta de TP-Link/Tapo, y solo sirven para
+#   conectarse por RTSP dentro de tu red).
+# Cómo conseguir la IP de la cámara:
+#   Misma pantalla de Configuración avanzada → Estado del dispositivo, o
+#   en la lista de dispositivos conectados de tu router.
+
+paths:
+  trampa-rio:
+    # "stream2" es la subcorriente (menor resolución/bitrate) de la Tapo —
+    # conviene para un relay simple. Usa "stream1" si quieres la calidad alta.
+    source: rtsp://USUARIO:CONTRASENA@IP_DE_LA_CAMARA:554/stream2

@@ -46,3 +46,8 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# MediaMTX local (binario + config con credenciales reales de la cámara) —
+# ver camaras/mediamtx.yml para la plantilla sin credenciales que sí se versiona.
+/camaras/mediamtx/
+/camaras/ffmpeg/
